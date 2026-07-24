@@ -4,6 +4,7 @@ import com.library.common.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -54,6 +55,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleMalformedRequest(Exception ex) {
         log.warn("Malformed request: {}", ex.getMessage());
         return build(ErrorCode.BAD_REQUEST, "Yêu cầu không hợp lệ hoặc thiếu tham số", null);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadSort(PropertyReferenceException ex) {
+        log.warn("Invalid sort/property reference: {}", ex.getMessage());
+        return build(ErrorCode.BAD_REQUEST, "Trường sắp xếp hoặc lọc không hợp lệ", null);
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)

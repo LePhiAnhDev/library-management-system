@@ -4,9 +4,9 @@ import com.library.domain.user.dto.UserResponse;
 import org.mapstruct.Mapper;
 
 /**
- * Entity to DTO mapping. Component model is set globally to Spring in the compiler config.
+ * Entity to DTO mapping, generated as a Spring bean.
  */
-@Mapper
+@Mapper(componentModel = "spring")
 public interface UserMapper {
 
     UserResponse toResponse(User user);
