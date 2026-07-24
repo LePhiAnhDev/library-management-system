@@ -42,7 +42,7 @@ export function DataTable<T>({
   onRowClick?: (row: T) => void
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border">
+    <div className="overflow-x-auto rounded-xl border bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>
