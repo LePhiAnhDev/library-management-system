@@ -173,16 +173,25 @@ Như vậy chỉ cần `git push origin main` là hệ thống tự build, push 
 > `git pull` (deploy key hoặc HTTPS token). Muốn deploy ít tự động hơn: sửa điều kiện `if:`
 > của job `deploy` để chỉ chạy theo tag hoặc chỉ khi bấm `workflow_dispatch`.
 
+> **Đã cấu hình xong (không cần làm lại):** cả 5 secret trên đã được thêm vào repo. GitHub Actions
+> dùng một SSH deploy key riêng (ed25519) đã cài public key vào `~/.ssh/authorized_keys` của VPS,
+> và một Docker Hub access token (scope Read & Write). Pipeline đã chạy full end-to-end và xanh,
+> deploy tự động lên VPS thành công. Từ nay chỉ cần `git push origin main` là tự build + push + deploy.
+
 ---
 
-## Việc cần làm trước khi go-live (TODO)
+## Trạng thái go-live
 
-- [ ] **Clerk production**: tạo Clerk production instance cho `drx.io.vn`, cấu hình DNS theo
-      hướng dẫn Clerk, rồi thay `pk_live_.../sk_live_...` và `CLERK_ISSUER_URI`/`CLERK_JWKS_URI`
-      trong `backend/.env.production` và `frontend/.env.production` (hiện đang là khóa test).
-- [ ] **Mật khẩu DB**: đặt `POSTGRES_PASSWORD` mạnh trong `backend/.env.production`.
-- [ ] **DNS**: trỏ `@` và `api` về IP VPS, bật Proxied + SSL Flexible.
-- [ ] **GitHub secrets**: thêm đủ các secret ở bảng trên để CD hoạt động.
+- [x] **Clerk production**: đã bật Clerk production instance cho `drx.io.vn`
+      (Frontend API `clerk.drx.io.vn`), đã thay `pk_live_.../sk_live_...` và
+      `CLERK_ISSUER_URI`/`CLERK_JWKS_URI` trong cả hai `.env.production`.
+- [x] **DNS + SSL**: `@`, `api`, `clerk` trỏ về VPS qua Cloudflare (Proxied, SSL Flexible),
+      HTTPS công khai đã xác minh.
+- [x] **GitHub secrets**: đã thêm đủ `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `VPS_HOST`,
+      `VPS_USER`, `VPS_SSH_KEY`. Pipeline CI/CD đã chạy full (CI -> build-push -> deploy) xanh,
+      xác minh auto-deploy hoạt động.
+- [ ] **Mật khẩu DB** (khuyến nghị): đặt `POSTGRES_PASSWORD` mạnh hơn trong `backend/.env.production`
+      (đổi mật khẩu đồng nghĩa phải reset volume postgres của stack, xem ghi chú bên dưới).
 - [ ] (Tuỳ chọn) Tạo bucket R2 riêng cho production thay vì dùng chung với dev.
 
 ## Ghi chú bảo mật
