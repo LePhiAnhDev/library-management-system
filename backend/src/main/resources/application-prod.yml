@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  level:
+    root: WARN
+    com.library: INFO
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+# Swagger UI and the OpenAPI descriptor are disabled in production.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
