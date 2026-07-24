@@ -27,7 +27,7 @@ services:
       - ./backend/.env.production
     environment:
       # jwilder/nginx-proxy routing. VIRTUAL_PORT must match EXPOSE in backend/Dockerfile.
-      VIRTUAL_HOST: api.shortloop.co
+      VIRTUAL_HOST: api.drx.io.vn
       VIRTUAL_PORT: 8080
     depends_on:
       postgres:
@@ -49,7 +49,7 @@ services:
       - ./frontend/.env.production
     environment:
       # VIRTUAL_PORT must match EXPOSE in frontend/Dockerfile.
-      VIRTUAL_HOST: shortloop.co
+      VIRTUAL_HOST: drx.io.vn
       VIRTUAL_PORT: 3000
     depends_on:
       backend:

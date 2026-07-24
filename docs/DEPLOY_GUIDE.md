@@ -11,14 +11,14 @@ Cloudflare (HTTPS, SSL Flexible)
         ▼
 VPS: public-nginx (jwilder/nginx-proxy, network_mode host, cổng 80)
         │  route theo VIRTUAL_HOST
-        ├── shortloop.co        -> frontend  (container :3000)
-        └── api.shortloop.co    -> backend   (container :8080)
+        ├── drx.io.vn        -> frontend  (container :3000)
+        └── api.drx.io.vn    -> backend   (container :8080)
                                       │
                                       ▼
                                  postgres (:5432, nội bộ Docker network)
 ```
 
-- Tên miền: Frontend `https://shortloop.co`, Backend API `https://api.shortloop.co`.
+- Tên miền: Frontend `https://drx.io.vn`, Backend API `https://api.drx.io.vn`.
 - SSL: Cloudflare **Flexible** (không cấu hình TLS ở tầng ứng dụng/Docker).
 - Registry: Docker Hub, user `lephianhdev386ht`.
   - Backend: `lephianhdev386ht/library-management-system-backend:latest`
@@ -31,7 +31,7 @@ VPS: public-nginx (jwilder/nginx-proxy, network_mode host, cổng 80)
 
 - VPS đã chạy sẵn reverse proxy `public-nginx` (jwilder/nginx-proxy 1.6, `network_mode: host`, cổng 80).
 - Docker + Docker Compose v2 trên VPS.
-- Tài khoản Docker Hub (`docker login` trên máy build), tài khoản Cloudflare quản lý `shortloop.co`.
+- Tài khoản Docker Hub (`docker login` trên máy build), tài khoản Cloudflare quản lý `drx.io.vn`.
 - Đã điền các giá trị **TODO** trong `backend/.env.production` và `frontend/.env.production`
   (xem mục "Việc cần làm trước khi go-live").
 
@@ -86,8 +86,8 @@ docker compose -f docker-compose.prod.yml logs -f backend
 ```
 
 Trong log backend, tìm dòng Flyway kiểu `Successfully applied N migrations` và
-`Started LibraryApplication`. Sau đó mở `https://shortloop.co` và
-`https://api.shortloop.co/actuator/health` (trả `{"status":"UP"}`).
+`Started LibraryApplication`. Sau đó mở `https://drx.io.vn` và
+`https://api.drx.io.vn/actuator/health` (trả `{"status":"UP"}`).
 
 ---
 
@@ -154,7 +154,7 @@ Pipeline `.github/workflows/ci.yml` (tên: `CI/CD`) chạy khi push/PR vào `mai
 1. **CI** (mọi push/PR): test backend (Maven + Testcontainers), lint/typecheck/build frontend, quét Trivy.
 2. **CD** (chỉ khi push vào `main` hoặc chạy tay `workflow_dispatch`, sau khi CI xanh):
    - `build-push`: build và push image backend + frontend lên Docker Hub (tag `latest` và theo commit SHA).
-   - `deploy`: SSH vào VPS, `git pull` -> `docker compose pull` -> `up -d` -> dọn image cũ.
+   - `deploy`: SSH vào VPS, `git pull` -> `docker compose pull` -> `up -d --remove-orphans`.
 
 Như vậy chỉ cần `git push origin main` là hệ thống tự build, push và deploy (E2E).
 
@@ -177,7 +177,7 @@ Như vậy chỉ cần `git push origin main` là hệ thống tự build, push 
 
 ## Việc cần làm trước khi go-live (TODO)
 
-- [ ] **Clerk production**: tạo Clerk production instance cho `shortloop.co`, cấu hình DNS theo
+- [ ] **Clerk production**: tạo Clerk production instance cho `drx.io.vn`, cấu hình DNS theo
       hướng dẫn Clerk, rồi thay `pk_live_.../sk_live_...` và `CLERK_ISSUER_URI`/`CLERK_JWKS_URI`
       trong `backend/.env.production` và `frontend/.env.production` (hiện đang là khóa test).
 - [ ] **Mật khẩu DB**: đặt `POSTGRES_PASSWORD` mạnh trong `backend/.env.production`.
