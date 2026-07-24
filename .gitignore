@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Playwright MCP scratch
+.playwright-mcp/
+TTS-Smart/

@@ -1,0 +1,36 @@
+services:
+    postgres:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        env_file:
+            - ./backend/.env
+        ports:
+            - '${DB_PORT}:5432'
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - app_network
+
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        command: redis-server --maxmemory-policy noeviction --appendonly yes
+        env_file:
+            - ./backend/.env
+        ports:
+            - '${REDIS_PORT}:6379'
+        volumes:
+            - redis_data:/data
+        networks:
+            - app_network
+
+volumes:
+    postgres_data:
+        driver: local
+
+    redis_data:
+        driver: local
+
+networks:
+    app_network:
+        driver: bridge
