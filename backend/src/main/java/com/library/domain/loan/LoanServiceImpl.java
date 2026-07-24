@@ -13,6 +13,8 @@ import com.library.domain.loan.dto.ReturnRequest;
 import com.library.domain.member.Member;
 import com.library.domain.member.MemberRepository;
 import com.library.domain.member.MemberStatus;
+import com.library.domain.reservation.Reservation;
+import com.library.domain.reservation.ReservationService;
 import com.library.domain.settings.LibrarySettings;
 import com.library.domain.settings.LoanPolicy;
 import com.library.domain.settings.SettingsService;
@@ -47,6 +49,7 @@ public class LoanServiceImpl implements LoanService {
     private final SettingsService settingsService;
     private final FineService fineService;
     private final CurrentUserService currentUserService;
+    private final ReservationService reservationService;
 
     @Override
     @Transactional
@@ -58,9 +61,7 @@ public class LoanServiceImpl implements LoanService {
         validateMemberEligibility(member, today);
 
         BookCopy copy = resolveCopy(request);
-        if (copy.getStatus() != BookCopyStatus.AVAILABLE) {
-            throw new ConflictException("Bản sao không sẵn sàng để cho mượn");
-        }
+        Reservation heldReservation = resolveReservedCopyHold(copy, member);
         Long bookId = copy.getBook().getId();
 
         LoanPolicy policy = settingsService.getLoanPolicy(member.getMembershipType());
@@ -81,6 +82,9 @@ public class LoanServiceImpl implements LoanService {
                 .build();
         Loan saved = loanRepository.save(loan);
 
+        if (heldReservation != null) {
+            reservationService.markFulfilled(heldReservation);
+        }
         bookCountService.refresh(bookId);
         return loanMapper.toResponse(saved);
     }
@@ -100,7 +104,9 @@ public class LoanServiceImpl implements LoanService {
         if (loan.getRenewCount() >= policy.getMaxRenewals()) {
             throw new BusinessRuleException("Đã đạt số lần gia hạn tối đa");
         }
-        // Phase 7: also block renewal when the title has a PENDING reservation waiting.
+        if (reservationService.hasPendingReservation(loan.getBookCopy().getBook().getId())) {
+            throw new BusinessRuleException("Không thể gia hạn vì sách đang có người đặt trước");
+        }
         loan.setDueDate(loan.getDueDate().plusDays(policy.getLoanPeriodDays()));
         loan.setRenewCount(loan.getRenewCount() + 1);
         return loanMapper.toResponse(loanRepository.save(loan));
@@ -177,8 +183,11 @@ public class LoanServiceImpl implements LoanService {
                 applyNote(copy, note);
                 fineService.createDamagedFine(loan.getMember(), loan, overrideFee);
             }
-            case NORMAL -> copy.setStatus(BookCopyStatus.AVAILABLE);
-            // Phase 7: if the title has a READY-able reservation, hand the copy over as RESERVED instead.
+            case NORMAL -> {
+                // Hand the freed copy to the next reservation in the queue, else make it available.
+                boolean held = reservationService.holdForNextInQueue(copy);
+                copy.setStatus(held ? BookCopyStatus.RESERVED : BookCopyStatus.AVAILABLE);
+            }
         }
         bookCopyRepository.save(copy);
 
@@ -211,6 +220,25 @@ public class LoanServiceImpl implements LoanService {
         if (unpaid.compareTo(settings.getFineBlockThreshold()) > 0) {
             throw new BusinessRuleException("Độc giả còn phạt chưa thanh toán vượt ngưỡng cho phép");
         }
+    }
+
+    /**
+     * When borrowing a RESERVED copy, it must be the hold belonging to this member (reservation pickup).
+     * AVAILABLE copies borrow normally; any other status is not lendable.
+     */
+    private Reservation resolveReservedCopyHold(BookCopy copy, Member member) {
+        if (copy.getStatus() == BookCopyStatus.AVAILABLE) {
+            return null;
+        }
+        if (copy.getStatus() == BookCopyStatus.RESERVED) {
+            Reservation hold = reservationService.findActiveHold(copy.getId())
+                    .orElseThrow(() -> new ConflictException("Bản sao đang được giữ chỗ nhưng không xác định được đặt trước"));
+            if (!hold.getMember().getId().equals(member.getId())) {
+                throw new ConflictException("Bản sao đang được giữ cho độc giả khác");
+            }
+            return hold;
+        }
+        throw new ConflictException("Bản sao không sẵn sàng để cho mượn");
     }
 
     private BookCopy resolveCopy(CheckoutRequest request) {
