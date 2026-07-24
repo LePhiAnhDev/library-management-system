@@ -1,5 +1,7 @@
 package com.library.config;
 
+import com.library.security.ClerkUserProvisioningFilter;
+import com.library.security.CurrentUserService;
 import com.library.security.RestAccessDeniedHandler;
 import com.library.security.RestAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -26,6 +29,7 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
+    private final CurrentUserService currentUserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,6 +50,7 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .jwt(Customizer.withDefaults()))
+                .addFilterAfter(new ClerkUserProvisioningFilter(currentUserService), BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler));
