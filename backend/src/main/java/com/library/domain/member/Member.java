@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDate;
 
@@ -19,6 +20,7 @@ import java.time.LocalDate;
  */
 @Entity
 @Table(name = "members")
+@BatchSize(size = 64)
 @Getter
 @Setter
 @Builder

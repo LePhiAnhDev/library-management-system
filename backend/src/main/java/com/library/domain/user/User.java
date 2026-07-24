@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 /**
  * Internal staff profile, provisioned one-to-one from a Clerk account via clerk_user_id (the token sub).
@@ -19,6 +20,7 @@ import lombok.Setter;
  */
 @Entity
 @Table(name = "users")
+@BatchSize(size = 64)
 @Getter
 @Setter
 @Builder

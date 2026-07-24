@@ -3,6 +3,7 @@ package com.library.domain.book;
 import com.library.domain.book.dto.BookCopyRequest;
 import com.library.domain.book.dto.BookCopyResponse;
 import com.library.domain.book.dto.BookCopyStatusRequest;
+import com.library.domain.loan.LoanRepository;
 import com.library.exception.BusinessRuleException;
 import com.library.exception.DuplicateResourceException;
 import com.library.exception.ResourceNotFoundException;
@@ -24,6 +25,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     private final BookRepository bookRepository;
     private final BookCopyMapper mapper;
     private final BookCountService countService;
+    private final LoanRepository loanRepository;
 
     @Override
     @Transactional
@@ -92,6 +94,9 @@ public class BookCopyServiceImpl implements BookCopyService {
         BookCopy copy = getEntity(copyId);
         if (copy.getStatus() == BookCopyStatus.BORROWED || copy.getStatus() == BookCopyStatus.RESERVED) {
             throw new BusinessRuleException("Không thể xóa bản sao đang được mượn hoặc đang giữ chỗ");
+        }
+        if (loanRepository.existsByBookCopyId(copyId)) {
+            throw new BusinessRuleException("Không thể xóa bản sao đã có lịch sử mượn");
         }
         Long bookId = copy.getBook().getId();
         bookCopyRepository.delete(copy);

@@ -32,6 +32,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "books")
+@BatchSize(size = 64)
 @Getter
 @Setter
 @Builder

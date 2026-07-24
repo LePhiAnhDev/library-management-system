@@ -19,7 +19,9 @@ public class BookCountService {
 
     @Transactional
     public void refresh(Long bookId) {
-        Book book = bookRepository.findById(bookId)
+        // Write-lock the book row so concurrent copy/availability changes on the same book
+        // serialize here; the recount below is then authoritative (no lost decrements).
+        Book book = bookRepository.lockById(bookId)
                 .orElseThrow(() -> ResourceNotFoundException.of("sách", bookId));
         long total = bookCopyRepository.countByBookId(bookId);
         long available = bookCopyRepository.countByBookIdAndStatus(bookId, BookCopyStatus.AVAILABLE);

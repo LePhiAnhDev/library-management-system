@@ -1,8 +1,11 @@
 package com.library.domain.member;
 
 import com.library.common.PageResponse;
+import com.library.domain.fine.FineRepository;
+import com.library.domain.loan.LoanRepository;
 import com.library.domain.member.dto.MemberRequest;
 import com.library.domain.member.dto.MemberResponse;
+import com.library.exception.BusinessRuleException;
 import com.library.exception.DuplicateResourceException;
 import com.library.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,8 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository repository;
     private final MemberMapper mapper;
+    private final LoanRepository loanRepository;
+    private final FineRepository fineRepository;
 
     @Override
     @Transactional
@@ -91,8 +96,13 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public void delete(Long id) {
         Member member = getEntity(id);
-        // A member with borrowing history or fines is never removed; those guards are enforced
-        // by the loan and fine modules. Unreferenced records may be deleted here.
+        // Never hard delete a member that has transactions; only clean, unreferenced records go.
+        if (loanRepository.existsByMemberId(id)) {
+            throw new BusinessRuleException("Không thể xóa độc giả đã có lịch sử mượn");
+        }
+        if (fineRepository.existsByMemberId(id)) {
+            throw new BusinessRuleException("Không thể xóa độc giả đang có phạt");
+        }
         repository.delete(member);
     }
 
