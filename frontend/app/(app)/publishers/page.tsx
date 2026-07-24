@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useApi } from "@/lib/api"
+import { selectLabel } from "@/lib/labels"
 import { formResolver, handleMutationError } from "@/lib/form-errors"
 import type { Page, Publisher, RecordStatus } from "@/lib/types"
 
@@ -160,7 +161,7 @@ export default function PublishersPage() {
           }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue />
+            <SelectValue>{(v) => selectLabel(v, "Tất cả trạng thái")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Tất cả trạng thái</SelectItem>

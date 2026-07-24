@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useApi } from "@/lib/api"
+import { selectLabel } from "@/lib/labels"
 import { formatDate } from "@/lib/format"
 import { handleMutationError } from "@/lib/form-errors"
 import type { Loan, Member, Page } from "@/lib/types"
@@ -195,7 +196,7 @@ function ReturnTab() {
           <FormField label="Tình trạng sách">
             <Select value={condition} onValueChange={(value) => setCondition(value as ReturnCondition)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{(v) => selectLabel(v)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="NORMAL">Bình thường</SelectItem>

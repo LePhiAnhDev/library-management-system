@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useApi } from "@/lib/api"
+import { selectLabel } from "@/lib/labels"
 import { formatCurrency, formatDate } from "@/lib/format"
 import { formResolver, handleMutationError } from "@/lib/form-errors"
 import type { Fine, FineStatus, FineType, Member, Page } from "@/lib/types"
@@ -157,7 +158,7 @@ export default function FinesPage() {
           }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue />
+            <SelectValue>{(v) => selectLabel(v, "Tất cả loại phạt")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Tất cả loại phạt</SelectItem>
@@ -174,7 +175,7 @@ export default function FinesPage() {
           }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue />
+            <SelectValue>{(v) => selectLabel(v, "Tất cả trạng thái")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
@@ -318,7 +319,7 @@ function CreateFineDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <FormField label="Loại phạt" required>
             <Select value={type} onValueChange={(value) => setType(value as FineType)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{(v) => selectLabel(v)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="OVERDUE">Quá hạn</SelectItem>

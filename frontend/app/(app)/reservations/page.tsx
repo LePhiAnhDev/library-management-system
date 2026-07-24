@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useApi } from "@/lib/api"
+import { selectLabel } from "@/lib/labels"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { handleMutationError } from "@/lib/form-errors"
 import type { Book, Member, Page, Reservation, ReservationStatus } from "@/lib/types"
@@ -141,7 +142,7 @@ export default function ReservationsPage() {
           }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue />
+            <SelectValue>{(v) => selectLabel(v, "Tất cả trạng thái")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Tất cả trạng thái</SelectItem>

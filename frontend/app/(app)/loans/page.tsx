@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useApi } from "@/lib/api"
+import { selectLabel } from "@/lib/labels"
 import { formatDate } from "@/lib/format"
 import { handleMutationError } from "@/lib/form-errors"
 import type { Loan, LoanStatus, Page } from "@/lib/types"
@@ -161,7 +162,7 @@ export default function LoansPage() {
           }}
         >
           <SelectTrigger className="w-40">
-            <SelectValue />
+            <SelectValue>{(v) => selectLabel(v, "Tất cả")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Tất cả</SelectItem>
@@ -290,7 +291,7 @@ function ReturnLoanDialog({
           <FormField label="Tình trạng sách">
             <Select value={condition} onValueChange={(value) => setCondition(value as ReturnCondition)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{(v) => selectLabel(v)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="NORMAL">Bình thường</SelectItem>

@@ -45,6 +45,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useApi } from "@/lib/api"
+import { selectLabel } from "@/lib/labels"
 import { formResolver, handleMutationError } from "@/lib/form-errors"
 import type { Member, MemberStatus, MembershipType, Page } from "@/lib/types"
 
@@ -195,7 +196,7 @@ export default function MembersPage() {
           }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue />
+            <SelectValue>{(v) => selectLabel(v, "Tất cả loại thẻ")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Tất cả loại thẻ</SelectItem>
@@ -212,7 +213,7 @@ export default function MembersPage() {
           }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue />
+            <SelectValue>{(v) => selectLabel(v, "Tất cả trạng thái")}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
@@ -374,7 +375,7 @@ function MemberFormDialog({
           <FormField label="Loại thẻ" required>
             <Select value={membershipType} onValueChange={(value) => setMembershipType(value as MembershipType)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{(v) => selectLabel(v)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="REGULAR">Thường</SelectItem>
@@ -440,7 +441,7 @@ function MemberStatusDialog({
         <FormField label="Trạng thái">
           <Select value={status} onValueChange={(value) => setStatus(value as MemberStatus)}>
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue>{(v) => selectLabel(v)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ACTIVE">Hoạt động</SelectItem>

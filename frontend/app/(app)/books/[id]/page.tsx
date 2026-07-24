@@ -45,6 +45,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { useApi } from "@/lib/api"
+import { selectLabel } from "@/lib/labels"
 import { formatDate } from "@/lib/format"
 import { formResolver, handleMutationError } from "@/lib/form-errors"
 import type { Book, BookCopy } from "@/lib/types"
@@ -452,7 +453,7 @@ function ChangeCopyStatusDialog({
           <FormField label="Trạng thái">
             <Select value={status} onValueChange={(value) => setStatus(value as string)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{(v) => selectLabel(v)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {COPY_STATUS_OPTIONS.map((option) => (
