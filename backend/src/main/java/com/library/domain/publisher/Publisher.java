@@ -12,12 +12,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 /**
  * Book publisher.
  */
 @Entity
 @Table(name = "publishers")
+@BatchSize(size = 64)
 @Getter
 @Setter
 @Builder

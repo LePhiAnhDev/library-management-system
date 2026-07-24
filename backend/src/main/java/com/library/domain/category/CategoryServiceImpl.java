@@ -2,6 +2,7 @@ package com.library.domain.category;
 
 import com.library.common.PageResponse;
 import com.library.common.RecordStatus;
+import com.library.domain.book.BookRepository;
 import com.library.domain.category.dto.CategoryRequest;
 import com.library.domain.category.dto.CategoryResponse;
 import com.library.exception.BusinessRuleException;
@@ -23,6 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository repository;
     private final CategoryMapper mapper;
+    private final BookRepository bookRepository;
 
     @Override
     @Transactional
@@ -72,6 +74,9 @@ public class CategoryServiceImpl implements CategoryService {
         Category entity = getEntity(id);
         if (repository.existsByParentId(id)) {
             throw new BusinessRuleException("Không thể xóa thể loại đang có thể loại con");
+        }
+        if (bookRepository.existsByCategoryId(id)) {
+            throw new BusinessRuleException("Không thể xóa thể loại đang có sách");
         }
         // Soft delete: preserve the record for any books that reference it historically.
         entity.setStatus(RecordStatus.INACTIVE);

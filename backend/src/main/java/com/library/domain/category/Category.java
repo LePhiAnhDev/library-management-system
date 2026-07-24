@@ -15,12 +15,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 /**
  * Book category, optionally nested under a parent category (self reference).
  */
 @Entity
 @Table(name = "categories")
+@BatchSize(size = 64)
 @Getter
 @Setter
 @Builder

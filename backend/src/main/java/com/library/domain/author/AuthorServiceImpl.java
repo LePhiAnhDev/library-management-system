@@ -4,6 +4,8 @@ import com.library.common.PageResponse;
 import com.library.common.RecordStatus;
 import com.library.domain.author.dto.AuthorRequest;
 import com.library.domain.author.dto.AuthorResponse;
+import com.library.domain.book.BookRepository;
+import com.library.exception.BusinessRuleException;
 import com.library.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ public class AuthorServiceImpl implements AuthorService {
 
     private final AuthorRepository repository;
     private final AuthorMapper mapper;
+    private final BookRepository bookRepository;
 
     @Override
     @Transactional
@@ -64,8 +67,9 @@ public class AuthorServiceImpl implements AuthorService {
     @Transactional
     public void delete(Long id) {
         Author entity = getEntity(id);
-        // Soft delete keeps the author for books that reference it. Book reference guard is
-        // enforced once the catalog exists (books cannot leave an author dangling).
+        if (bookRepository.existsByAuthorsId(id)) {
+            throw new BusinessRuleException("Không thể xóa tác giả đang có sách tham chiếu");
+        }
         entity.setStatus(RecordStatus.INACTIVE);
         repository.save(entity);
     }

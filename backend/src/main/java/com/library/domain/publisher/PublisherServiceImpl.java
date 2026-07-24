@@ -3,7 +3,9 @@ package com.library.domain.publisher;
 import com.library.common.PageResponse;
 import com.library.common.RecordStatus;
 import com.library.domain.publisher.dto.PublisherRequest;
+import com.library.domain.book.BookRepository;
 import com.library.domain.publisher.dto.PublisherResponse;
+import com.library.exception.BusinessRuleException;
 import com.library.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ public class PublisherServiceImpl implements PublisherService {
 
     private final PublisherRepository repository;
     private final PublisherMapper mapper;
+    private final BookRepository bookRepository;
 
     @Override
     @Transactional
@@ -64,7 +67,9 @@ public class PublisherServiceImpl implements PublisherService {
     @Transactional
     public void delete(Long id) {
         Publisher entity = getEntity(id);
-        // Soft delete keeps the publisher for books that reference it.
+        if (bookRepository.existsByPublisherId(id)) {
+            throw new BusinessRuleException("Không thể xóa nhà xuất bản đang có sách");
+        }
         entity.setStatus(RecordStatus.INACTIVE);
         repository.save(entity);
     }

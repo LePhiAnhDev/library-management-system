@@ -14,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.List;
 
@@ -61,6 +62,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleBadSort(PropertyReferenceException ex) {
         log.warn("Invalid sort/property reference: {}", ex.getMessage());
         return build(ErrorCode.BAD_REQUEST, "Trường sắp xếp hoặc lọc không hợp lệ", null);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUploadTooLarge(MaxUploadSizeExceededException ex) {
+        log.warn("Upload too large: {}", ex.getMessage());
+        return build(ErrorCode.BAD_REQUEST, "Tệp tải lên vượt quá kích thước cho phép", null);
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)

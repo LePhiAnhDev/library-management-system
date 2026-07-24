@@ -12,12 +12,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 /**
  * Book author. Referenced by books through the many-to-many book_authors join.
  */
 @Entity
 @Table(name = "authors")
+@BatchSize(size = 64)
 @Getter
 @Setter
 @Builder
