@@ -1,0 +1,25 @@
+# Dependencies & build outputs (rebuilt inside the image)
+node_modules/
+.next/
+out/
+build/
+
+# VCS / IDE / OS
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Playwright MCP scratch
+.playwright-mcp/
+
+# Dev-only env files. NOTE: .env.production is intentionally NOT ignored
+# (its NEXT_PUBLIC_* values are baked into the bundle at build time).
+# ".env.local" is the dev file used by `next dev`.
+.env
+.env.local
+.env.development
+.env.*.local

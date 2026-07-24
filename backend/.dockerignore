@@ -1,0 +1,22 @@
+# Build artifacts
+target/
+
+# VCS / IDE / OS
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# Dev-only env files. NOTE: .env.production is intentionally NOT ignored
+# (it is baked into the image). The ".env.*.local" glob does not match it.
+.env
+.env.local
+.env.development
+.env.*.local
+
+# Docs and diagrams (not needed at runtime)
+*.md

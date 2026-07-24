@@ -1,0 +1,66 @@
+# Production stack for the VPS. Images are pulled from Docker Hub (not built here).
+# Traffic: Cloudflare (HTTPS) -> VPS:80 -> public-nginx (jwilder/nginx-proxy, host net)
+# -> container:VIRTUAL_PORT. No host ports are published; the proxy routes by VIRTUAL_HOST.
+# Redis is intentionally omitted: this backend does not use it.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: always
+    env_file:
+      - ./backend/.env.production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - library-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    image: lephianhdev386ht/library-management-system-backend:latest
+    restart: always
+    env_file:
+      - ./backend/.env.production
+    environment:
+      # jwilder/nginx-proxy routing. VIRTUAL_PORT must match EXPOSE in backend/Dockerfile.
+      VIRTUAL_HOST: api.shortloop.co
+      VIRTUAL_PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - library-network
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q --spider http://localhost:8080/actuator/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Flyway migrations run on startup, so allow generous warm-up time.
+      start_period: 60s
+
+  frontend:
+    image: lephianhdev386ht/library-management-system-frontend:latest
+    restart: always
+    env_file:
+      - ./frontend/.env.production
+    environment:
+      # VIRTUAL_PORT must match EXPOSE in frontend/Dockerfile.
+      VIRTUAL_HOST: shortloop.co
+      VIRTUAL_PORT: 3000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - library-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  library-network:
+    driver: bridge
