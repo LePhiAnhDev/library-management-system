@@ -1,0 +1,88 @@
+@startuml architecture
+' Hệ thống Quản lý Thư viện - Sơ đồ kiến trúc tổng thể. Render bằng PlantUML.
+
+title Hệ thống Quản lý Thư viện - Sơ đồ kiến trúc
+
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName "Segoe UI"
+skinparam componentStyle rectangle
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #2F7D5B
+}
+skinparam node {
+  BackgroundColor #F7FAF8
+  BorderColor #9AB8AA
+}
+skinparam ArrowColor #33684F
+
+actor "Nhân viên\n(thủ thư)" as staff
+
+cloud "Clerk (SaaS)" as clerk {
+  component "Xác thực\n(Frontend SDK)" as clerkAuth
+  component "JWKS\n(khóa công khai)" as clerkJwks
+  component "Backend API\n(hồ sơ người dùng)" as clerkApi
+}
+
+node "Trình duyệt" as browser {
+  component "Frontend - Next.js 16\n(App Router, client-rendered)\nBase UI/shadcn, Tailwind v4\nTanStack Query, Clerk SDK" as fe
+}
+
+node "Máy chủ ứng dụng (chạy native)" as appserver {
+  frame "Backend - Spring Boot 4.1 · REST API (cổng 8080)" as be {
+    component "Security\nOAuth2 Resource Server\nJwtDecoder qua JWKS + issuer\n+ ClerkUserProvisioningFilter" as sec
+    component "Controllers\n@RestController (mỏng)" as ctrl
+    component "Services\n@Transactional · nghiệp vụ\nStrategy tính phạt\nkhóa lạc quan + bi quan" as svc
+    component "Repositories\nSpring Data JPA" as repo
+    component "Entities\nHibernate / JPA 7" as ent
+    component "MapStruct\nDTO ↔ Entity" as map
+    component "StorageService\nAWS SDK S3 -> R2" as storage
+    component "Scheduler\nhết hạn giữ đặt trước" as sched
+    component "Flyway\nmigration khi khởi động" as flyway
+    component "GlobalExceptionHandler\nApiResponse chuẩn" as geh
+  }
+}
+
+database "PostgreSQL 17\n(Docker · cổng 5433)" as pg
+cloud "Cloudflare R2\n(S3-compatible)\nảnh bìa sách" as r2
+
+note as DOMAINS
+  <b>Các domain nghiệp vụ</b>
+  users · categories · authors · publishers
+  books · book-copies · members · loans
+  reservations · fines · reports · settings
+end note
+DOMAINS .. svc
+
+' ===================== Luồng chính =====================
+staff --> fe : "sử dụng (HTTPS)"
+fe --> clerkAuth : "đăng nhập, lấy session JWT"
+fe --> sec : "REST /api/v1/**\nBearer JWT (JSON)"
+fe --> r2 : "GET ảnh bìa\n(thẻ img, URL công khai)"
+
+sec --> ctrl : "request đã xác thực"
+ctrl --> svc : "gọi nghiệp vụ"
+svc --> repo
+svc --> map
+repo --> ent
+ent --> pg : "JDBC (Hibernate)"
+svc --> storage
+storage --> r2 : "PutObject (byte[])"
+
+' ===================== Luồng phụ trợ =====================
+sec ..> clerkJwks : "tải JWKS,\nxác thực chữ ký + issuer"
+sec ..> clerkApi : "provision user (lần đầu)"
+sched ..> svc : "kích hoạt định kỳ"
+flyway ..> pg : "áp migration V1..V13"
+ctrl ..> geh : "dịch lỗi -> ApiResponse"
+
+legend right
+  <b>Ghi chú</b>
+  Đường liền: luồng request/dữ liệu chính
+  Đường đứt: tác vụ phụ trợ / định kỳ / cross-cutting
+  Backend phân lớp: Security -> Controller -> Service -> Repository -> Entity -> DB
+  DTO tách Entity, ánh xạ bằng MapStruct; không có endpoint đăng nhập ở backend
+endlegend
+
+@enduml

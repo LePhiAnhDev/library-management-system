@@ -1,0 +1,246 @@
+@startuml database-schema
+' Hệ thống Quản lý Thư viện - Sơ đồ cơ sở dữ liệu (ERD)
+' Sinh từ các migration Flyway V1..V12 (PostgreSQL). Render bằng PlantUML.
+
+title Hệ thống Quản lý Thư viện - Sơ đồ CSDL (ERD)
+
+hide circle
+skinparam linetype ortho
+skinparam roundcorner 6
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam ArrowColor #2F7D5B
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #2F7D5B
+  ArrowColor #2F7D5B
+}
+
+' ===================== Người dùng nội bộ (nhân viên) =====================
+entity "users" as users {
+  * id : BIGINT <<PK>>
+  --
+  * clerk_user_id : VARCHAR(255) <<UK>>
+  email : VARCHAR(320)
+  full_name : VARCHAR(255)
+  avatar_url : VARCHAR(1024)
+  * status : VARCHAR(20)
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+' ===================== Danh mục sách =====================
+entity "categories" as categories {
+  * id : BIGINT <<PK>>
+  --
+  * name : VARCHAR(255)
+  description : VARCHAR(2000)
+  parent_id : BIGINT <<FK>>
+  * status : VARCHAR(20)
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+entity "authors" as authors {
+  * id : BIGINT <<PK>>
+  --
+  * full_name : VARCHAR(255)
+  biography : VARCHAR(2000)
+  * status : VARCHAR(20)
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+entity "publishers" as publishers {
+  * id : BIGINT <<PK>>
+  --
+  * name : VARCHAR(255)
+  address : VARCHAR(500)
+  phone : VARCHAR(30)
+  email : VARCHAR(320)
+  * status : VARCHAR(20)
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+entity "books" as books {
+  * id : BIGINT <<PK>>
+  --
+  * isbn : VARCHAR(20) <<UK>>
+  * title : VARCHAR(500)
+  subtitle : VARCHAR(500)
+  description : VARCHAR(4000)
+  publisher_id : BIGINT <<FK>>
+  category_id : BIGINT <<FK>>
+  publication_year : INT
+  language : VARCHAR(50)
+  page_count : INT
+  cover_image_url : VARCHAR(1024)
+  * total_copies : INT
+  * available_copies : INT
+  * status : VARCHAR(20)
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+' Bảng nối N:N giữa books và authors
+entity "book_authors" as book_authors <<junction>> {
+  * book_id : BIGINT <<PK,FK>>
+  * author_id : BIGINT <<PK,FK>>
+}
+
+entity "book_copies" as book_copies {
+  * id : BIGINT <<PK>>
+  --
+  * book_id : BIGINT <<FK>>
+  * barcode : VARCHAR(64) <<UK>>
+  shelf_location : VARCHAR(100)
+  * status : VARCHAR(20)
+  acquired_date : DATE
+  condition_note : VARCHAR(1000)
+  * version : BIGINT
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+' ===================== Độc giả =====================
+entity "members" as members {
+  * id : BIGINT <<PK>>
+  --
+  * member_code : VARCHAR(20) <<UK>>
+  * full_name : VARCHAR(255)
+  * email : VARCHAR(320) <<UK>>
+  phone : VARCHAR(30)
+  address : VARCHAR(500)
+  * membership_type : VARCHAR(20)
+  * join_date : DATE
+  expiry_date : DATE
+  * status : VARCHAR(20)
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+' ===================== Lưu thông =====================
+entity "loans" as loans {
+  * id : BIGINT <<PK>>
+  --
+  * code : VARCHAR(20) <<UK>>
+  * member_id : BIGINT <<FK>>
+  * book_copy_id : BIGINT <<FK>>
+  * borrow_date : DATE
+  * due_date : DATE
+  return_date : DATE
+  * status : VARCHAR(20)
+  * renew_count : INT
+  created_by : BIGINT <<FK>>
+  returned_by : BIGINT <<FK>>
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+entity "fines" as fines {
+  * id : BIGINT <<PK>>
+  --
+  * member_id : BIGINT <<FK>>
+  loan_id : BIGINT <<FK>>
+  * type : VARCHAR(20)
+  * amount : NUMERIC(15,2)
+  * status : VARCHAR(20)
+  reason : VARCHAR(500)
+  paid_at : TIMESTAMPTZ
+  settled_by : BIGINT <<FK>>
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+entity "reservations" as reservations {
+  * id : BIGINT <<PK>>
+  --
+  * member_id : BIGINT <<FK>>
+  * book_id : BIGINT <<FK>>
+  held_copy_id : BIGINT <<FK>>
+  * status : VARCHAR(20)
+  ready_at : TIMESTAMPTZ
+  pickup_expiry : DATE
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+' ===================== Cấu hình =====================
+entity "loan_policies" as loan_policies {
+  * membership_type : VARCHAR(20) <<PK>>
+  --
+  * max_books : INT
+  * loan_period_days : INT
+  * max_renewals : INT
+}
+
+entity "library_settings" as library_settings <<singleton>> {
+  * id : BIGINT <<PK>>
+  --
+  * library_name : VARCHAR(255)
+  library_address : VARCHAR(500)
+  * overdue_fine_per_day : NUMERIC(15,2)
+  * fine_block_threshold : NUMERIC(15,2)
+  * reservation_hold_days : INT
+  * lost_default_fee : NUMERIC(15,2)
+  * damaged_default_fee : NUMERIC(15,2)
+  * updated_at : TIMESTAMPTZ
+}
+
+' ===================== Quan hệ (khóa ngoại + cardinality) =====================
+' Danh mục tự tham chiếu (cha 1 : N con), category_id nullable => 0..1 cha
+categories |o--o{ categories : "parent_id (cha/con)"
+
+' Phân loại và xuất bản (FK nullable trên books)
+categories  |o--o{ books : "category_id"
+publishers  |o--o{ books : "publisher_id"
+
+' N:N books <-> authors qua bảng nối (mỗi bên 1 : N tới book_authors)
+books   ||--o{ book_authors : "book_id"
+authors ||--o{ book_authors : "author_id"
+
+' Một đầu sách có nhiều bản sao vật lý
+books ||--o{ book_copies : "book_id"
+
+' Phiếu mượn: bắt buộc thuộc 1 độc giả và 1 bản sao; created_by/returned_by là nhân viên (nullable)
+members     ||--o{ loans : "member_id"
+book_copies ||--o{ loans : "book_copy_id"
+users       |o--o{ loans : "created_by"
+users       |o--o{ loans : "returned_by"
+
+' Phạt: thuộc 1 độc giả; có thể gắn 1 phiếu mượn (nullable); settled_by là nhân viên (nullable)
+members ||--o{ fines : "member_id"
+loans   |o--o{ fines : "loan_id"
+users   |o--o{ fines : "settled_by"
+
+' Đặt trước: thuộc 1 độc giả và 1 đầu sách; có thể giữ 1 bản sao khi sẵn sàng (nullable)
+members     ||--o{ reservations : "member_id"
+books       ||--o{ reservations : "book_id"
+book_copies |o--o{ reservations : "held_copy_id"
+
+' Liên kết logic (KHÔNG phải FK CSDL): chính sách mượn áp dụng theo loại thẻ
+loan_policies ||..o{ members : "membership_type (logic)"
+
+note bottom of library_settings
+  Bảng cấu hình 1 dòng (id = 1),
+  độc lập, không có khóa ngoại.
+end note
+
+note as N_MN
+  <b>N:N</b> books ↔ authors được hiện thực hóa
+  bằng bảng nối <b>book_authors</b>
+  (PK tổ hợp book_id + author_id).
+end note
+N_MN .. book_authors
+
+legend right
+  <b>Ký hiệu cardinality (Crow's foot / IE)</b>
+  Ký hiệu gần thực thể cho biết số lượng ở phía đó:
+  ( || ) một và chỉ một    ( |o ) không hoặc một (0..1)
+  ( o{ ) không hoặc nhiều (0..N)    ( }| ) một hoặc nhiều (1..N)
+  Nét liền = khóa ngoại (FK) ;  nét đứt = liên kết logic (không FK)
+  PK: khóa chính,  FK: khóa ngoại,  UK: duy nhất,  dấu * = NOT NULL
+endlegend
+
+@enduml
