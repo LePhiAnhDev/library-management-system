@@ -45,13 +45,6 @@ spring:
     # Jackson 3 (Spring Boot 4 default) already serializes java.time types as ISO-8601 strings.
     default-property-inclusion: non_null
     time-zone: UTC
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          # Clerk issues the session JWT. Spring discovers the JWKS from the issuer metadata.
-          issuer-uri: ${CLERK_ISSUER_URI:https://just-drake-18.clerk.accounts.dev}
-
 server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
@@ -86,6 +79,10 @@ app:
   clerk:
     secret-key: ${CLERK_SECRET_KEY:}
     api-base-url: https://api.clerk.com/v1
+    # Clerk session JWT is validated directly against the JWKS (issuer discovery is bypassed),
+    # and the issuer claim is checked explicitly. See SecurityConfig#jwtDecoder.
+    issuer-uri: ${CLERK_ISSUER_URI:https://just-drake-18.clerk.accounts.dev}
+    jwks-uri: ${CLERK_JWKS_URI:https://just-drake-18.clerk.accounts.dev/.well-known/jwks.json}
   storage:
     r2:
       account-id: ${R2_ACCOUNT_ID:}

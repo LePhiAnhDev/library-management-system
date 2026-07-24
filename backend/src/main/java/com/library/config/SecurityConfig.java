@@ -12,6 +12,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -57,4 +60,17 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+    /**
+     * Validates the Clerk session JWT directly against the JWKS (OIDC issuer discovery is bypassed
+     * because Clerk's discovery document is not reliably resolvable by Spring) and checks the issuer
+     * claim explicitly.
+     */
+    @Bean
+    public JwtDecoder jwtDecoder(ClerkProperties clerkProperties) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(clerkProperties.jwksUri()).build();
+        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(clerkProperties.issuerUri()));
+        return decoder;
+    }
 }
+
