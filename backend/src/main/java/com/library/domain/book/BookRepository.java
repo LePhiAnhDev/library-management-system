@@ -1,5 +1,6 @@
 package com.library.domain.book;
 
+import com.library.common.RecordStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,6 +30,8 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
     boolean existsByPublisherId(Long publisherId);
 
     boolean existsByAuthorsId(Long authorId);
+
+    long countByStatus(RecordStatus status);
 
     @EntityGraph(attributePaths = {"authors", "category", "publisher"})
     Optional<Book> findWithDetailsById(Long id);

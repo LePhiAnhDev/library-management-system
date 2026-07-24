@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
 
     /** Earliest waiting reservation for a title (FIFO by creation time). */
+    long countByStatus(ReservationStatus status);
+
     Optional<Reservation> findFirstByBookIdAndStatusOrderByCreatedAtAsc(Long bookId, ReservationStatus status);
 
     boolean existsByBookIdAndMemberIdAndStatusIn(Long bookId, Long memberId, Collection<ReservationStatus> statuses);

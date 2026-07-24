@@ -2,6 +2,7 @@ package com.library.domain.member;
 
 import com.library.common.ApiResponse;
 import com.library.common.PageResponse;
+import com.library.domain.member.dto.MemberProfileResponse;
 import com.library.domain.member.dto.MemberRequest;
 import com.library.domain.member.dto.MemberResponse;
 import com.library.domain.member.dto.MemberStatusRequest;
@@ -31,6 +32,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final MemberService service;
+    private final MemberProfileService profileService;
+
+    @Operation(summary = "Hồ sơ độc giả", description = "Đang mượn, phạt chưa thu, đặt trước đang chờ")
+    @GetMapping("/{id}/profile")
+    public ApiResponse<MemberProfileResponse> profile(@PathVariable Long id) {
+        return ApiResponse.success(profileService.profile(id));
+    }
 
     @Operation(summary = "Tạo độc giả", description = "Mã độc giả được sinh tự động")
     @PostMapping
