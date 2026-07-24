@@ -1,6 +1,7 @@
 package com.library.exception;
 
 import com.library.common.ApiResponse;
+import com.library.storage.StorageException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -86,6 +87,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
         return build(ErrorCode.ACCESS_DENIED, "Bạn không có quyền thực hiện thao tác này", null);
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStorage(StorageException ex) {
+        log.error("Storage error", ex);
+        return build(ErrorCode.INTERNAL_ERROR, "Không thể tải ảnh lên kho lưu trữ, vui lòng thử lại", null);
     }
 
     @ExceptionHandler(Exception.class)

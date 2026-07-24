@@ -32,6 +32,15 @@ public class StorageService {
         if (contentType == null || !ALLOWED_TYPES.contains(contentType.toLowerCase())) {
             throw new BusinessRuleException("Chỉ chấp nhận ảnh JPEG, PNG, WEBP hoặc GIF");
         }
+        // Read into memory (covers are small, capped by the multipart limit): the AWS SDK signs the
+        // payload and therefore reads the body twice, but a real Tomcat multipart InputStream does not
+        // support mark/reset, so streaming it directly fails at runtime. Bytes are re-readable.
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException e) {
+            throw new StorageException("Không đọc được tệp ảnh khi tải lên", e);
+        }
         String key = "covers/" + bookId + "/" + UUID.randomUUID() + extensionFor(contentType);
         try {
             r2Client.putObject(
@@ -40,9 +49,7 @@ public class StorageService {
                             .key(key)
                             .contentType(contentType)
                             .build(),
-                    RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-        } catch (IOException e) {
-            throw new StorageException("Không đọc được tệp ảnh khi tải lên", e);
+                    RequestBody.fromBytes(bytes));
         } catch (RuntimeException e) {
             throw new StorageException("Không thể tải ảnh lên object storage", e);
         }
