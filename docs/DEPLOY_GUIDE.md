@@ -3,6 +3,10 @@
 Hệ thống Quản lý Thư viện: backend Spring Boot (Maven, Flyway), frontend Next.js,
 PostgreSQL, xác thực Clerk, lưu ảnh bìa trên Cloudflare R2.
 
+> **Trạng thái: đã ngừng triển khai.** Bản deploy production trên VPS và toàn bộ
+> pipeline CI/CD đã được tháo bỏ. Tài liệu này giữ lại làm tham chiếu kiến trúc và
+> quy trình deploy thủ công nếu cần dựng lại từ đầu.
+
 ## Kiến trúc triển khai
 
 ```
@@ -56,11 +60,15 @@ Không cần tạo migration thủ công: các file Flyway `V1..V13` đã có s�
 ```bash
 docker login
 
-cd backend  && ./build-push-be.sh && cd ..
-cd frontend && ./build-push-fe.sh && cd ..
+# --platform linux/amd64: máy local có thể khác kiến trúc với VPS.
+cd backend
+docker build --pull --platform linux/amd64 -t lephianhdev386ht/library-management-system-backend:latest .
+docker push lephianhdev386ht/library-management-system-backend:latest
+cd ../frontend
+docker build --pull --platform linux/amd64 -t lephianhdev386ht/library-management-system-frontend:latest .
+docker push lephianhdev386ht/library-management-system-frontend:latest
+cd ..
 ```
-
-> Script build cho `linux/amd64` và push cả tag `latest` (và tag tuỳ chọn nếu truyền `./build-push-be.sh v1.0.0`).
 
 ### 1.3. Khởi động trên VPS
 
@@ -98,8 +106,7 @@ Trong log backend, tìm dòng Flyway kiểu `Successfully applied N migrations` 
 ```bash
 git add . && git commit -m "feat: ..." && git push origin main
 
-cd backend  && ./build-push-be.sh && cd ..
-cd frontend && ./build-push-fe.sh && cd ..   # chỉ khi FE có đổi
+# build & push lại image (xem lệnh đầy đủ ở mục 1.2); frontend chỉ khi FE có đổi
 ```
 
 **VPS:**
@@ -127,7 +134,8 @@ Với thay đổi cấu trúc DB (thêm/sửa/xóa bảng, cột...), tạo mộ
 # Viết câu lệnh DDL/DML vào file đó, rồi:
 
 git add . && git commit -m "feat(db): V14 mo_ta_thay_doi" && git push origin main
-cd backend && ./build-push-be.sh && cd ..
+
+# build & push lại image backend (xem lệnh đầy đủ ở mục 1.2)
 ```
 
 **VPS:**
@@ -147,39 +155,6 @@ docker compose -f docker-compose.prod.yml logs -f backend
 
 ---
 
-## Phần 4 — CI/CD tự động (khuyến nghị)
-
-Pipeline `.github/workflows/ci.yml` (tên: `CI/CD`) chạy khi push/PR vào `main`:
-
-1. **CI** (mọi push/PR): test backend (Maven + Testcontainers), lint/typecheck/build frontend, quét Trivy.
-2. **CD** (chỉ khi push vào `main` hoặc chạy tay `workflow_dispatch`, sau khi CI xanh):
-   - `build-push`: build và push image backend + frontend lên Docker Hub (tag `latest` và theo commit SHA).
-   - `deploy`: SSH vào VPS, `git pull` -> `docker compose pull` -> `up -d --remove-orphans`.
-
-Như vậy chỉ cần `git push origin main` là hệ thống tự build, push và deploy (E2E).
-
-### Secrets cần thêm trong GitHub (Settings -> Secrets and variables -> Actions)
-
-| Secret              | Mô tả                                                        |
-| ------------------- | ------------------------------------------------------------ |
-| `DOCKERHUB_USERNAME`| `lephianhdev386ht`                                           |
-| `DOCKERHUB_TOKEN`   | Access token Docker Hub (Account Settings -> Security)       |
-| `VPS_HOST`          | IP hoặc hostname VPS                                          |
-| `VPS_USER`          | user SSH (ví dụ `root` hoặc `deploy`)                        |
-| `VPS_SSH_KEY`       | private key SSH có quyền vào VPS                              |
-| `VPS_PORT`          | (tuỳ chọn) cổng SSH, mặc định `22`                           |
-
-> VPS cần đã `git clone` sẵn repo ở `/opt/projects/library-management-system` và có quyền
-> `git pull` (deploy key hoặc HTTPS token). Muốn deploy ít tự động hơn: sửa điều kiện `if:`
-> của job `deploy` để chỉ chạy theo tag hoặc chỉ khi bấm `workflow_dispatch`.
-
-> **Đã cấu hình xong (không cần làm lại):** cả 5 secret trên đã được thêm vào repo. GitHub Actions
-> dùng một SSH deploy key riêng (ed25519) đã cài public key vào `~/.ssh/authorized_keys` của VPS,
-> và một Docker Hub access token (scope Read & Write). Pipeline đã chạy full end-to-end và xanh,
-> deploy tự động lên VPS thành công. Từ nay chỉ cần `git push origin main` là tự build + push + deploy.
-
----
-
 ## Trạng thái go-live
 
 - [x] **Clerk production**: đã bật Clerk production instance cho `drx.io.vn`
@@ -187,9 +162,6 @@ Như vậy chỉ cần `git push origin main` là hệ thống tự build, push 
       `CLERK_ISSUER_URI`/`CLERK_JWKS_URI` trong cả hai `.env.production`.
 - [x] **DNS + SSL**: `@`, `api`, `clerk` trỏ về VPS qua Cloudflare (Proxied, SSL Flexible),
       HTTPS công khai đã xác minh.
-- [x] **GitHub secrets**: đã thêm đủ `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `VPS_HOST`,
-      `VPS_USER`, `VPS_SSH_KEY`. Pipeline CI/CD đã chạy full (CI -> build-push -> deploy) xanh,
-      xác minh auto-deploy hoạt động.
 - [ ] **Mật khẩu DB** (khuyến nghị): đặt `POSTGRES_PASSWORD` mạnh hơn trong `backend/.env.production`
       (đổi mật khẩu đồng nghĩa phải reset volume postgres của stack, xem ghi chú bên dưới).
 - [ ] (Tuỳ chọn) Tạo bucket R2 riêng cho production thay vì dùng chung với dev.

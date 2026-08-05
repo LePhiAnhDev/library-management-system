@@ -3,8 +3,8 @@
 # ============================================================================
 # Builder: build the Spring Boot fat jar with Maven.
 # Tests are skipped here on purpose: the integration tests use Testcontainers
-# which needs a Docker daemon inside the build (not available). CI runs them
-# separately (.github/workflows/ci.yml).
+# which needs a Docker daemon inside the build (not available). Run them
+# separately with `./mvnw test`.
 # ============================================================================
 FROM maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /build

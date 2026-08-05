@@ -132,10 +132,6 @@ cd frontend
 pnpm lint && pnpm typecheck && pnpm build
 ```
 
-## CI/CD
-
-GitHub Actions (`.github/workflows/ci.yml`) chạy khi push/PR lên `main`: build và test backend (Maven), lint + typecheck + build frontend (pnpm), quét lỗ hổng dependency (Trivy, mang tính cảnh báo). CI là lớp phát hiện lỗi sớm, không bắt buộc cổng merge.
-
 ## Triển khai
 
 - PostgreSQL qua Docker Compose (pin `postgres:17-alpine`, có healthcheck và volume bền vững).
