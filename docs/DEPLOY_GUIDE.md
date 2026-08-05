@@ -168,5 +168,10 @@ docker compose -f docker-compose.prod.yml logs -f backend
 
 ## Ghi chú bảo mật
 
-Các file `.env.production` được commit vào repo private này một cách có chủ đích để đơn giản
-hóa pipeline (đã chấp nhận rủi ro). Nếu repo chuyển sang public, phải rotate toàn bộ secret trước.
+Các file `.env.production` được commit vào repo một cách có chủ đích để đơn giản hóa pipeline,
+với giả định repo là private.
+
+> ⚠️ **Repo hiện đang PUBLIC.** Điều kiện của giả định trên không còn đúng, nên các giá trị sau
+> đang bị lộ công khai (và vẫn còn trong git history dù có xóa file):
+> `CLERK_SECRET_KEY` (`sk_live_...`), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+> `POSTGRES_PASSWORD`. Cần **rotate toàn bộ** các secret này.
